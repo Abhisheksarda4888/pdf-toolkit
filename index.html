@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PDF Toolkit Pro — Free Browser-Based PDF Tools</title>
+<meta name="description" content="25+ professional PDF tools. Merge, split, compress, convert and edit PDFs entirely in your browser. No uploads. No servers. 100% private.">
+<link rel="stylesheet" href="style.css">
+<style>
+/* HOME SPECIFIC */
+.hero {
+  max-width: 1280px; margin: 0 auto;
+  padding: 80px 24px 60px;
+  text-align: center; position: relative; z-index: 1;
+}
+.hero-tag {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: rgba(245,200,66,0.08); border: 1px solid rgba(245,200,66,0.2);
+  color: var(--gold); font-size: 0.78rem; font-weight: 700;
+  padding: 7px 18px; border-radius: 50px; margin-bottom: 28px;
+  letter-spacing: 0.06em; text-transform: uppercase;
+  animation: fadeUp 0.5s ease both;
+}
+.hero-tag .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--gold); animation: pulse 2s infinite; }
+.hero h1 {
+  font-family: 'Syne', sans-serif;
+  font-size: clamp(2.4rem, 6vw, 5rem);
+  font-weight: 900; line-height: 1.05;
+  letter-spacing: -0.03em; margin-bottom: 20px;
+  animation: fadeUp 0.5s 0.1s ease both;
+}
+.hero h1 em {
+  font-style: normal;
+  background: linear-gradient(135deg, var(--gold), var(--teal2), var(--violet));
+  background-size: 200% auto;
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  animation: shimmer 3s linear infinite;
+}
+.hero-sub {
+  color: var(--txt2); font-size: 1.1rem; max-width: 540px;
+  margin: 0 auto 36px; line-height: 1.7;
+  animation: fadeUp 0.5s 0.2s ease both;
+}
+.hero-btns {
+  display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;
+  animation: fadeUp 0.5s 0.3s ease both; margin-bottom: 52px;
+}
+.stats {
+  display: flex; justify-content: center; gap: 40px; flex-wrap: wrap;
+  animation: fadeUp 0.5s 0.4s ease both;
+}
+.stat-item { text-align: center; }
+.stat-num {
+  font-family: 'Syne', sans-serif;
+  font-size: 2.2rem; font-weight: 800;
+  background: linear-gradient(135deg, var(--gold), var(--teal2));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+.stat-lbl { font-size: 0.72rem; color: var(--txt3); text-transform: uppercase; letter-spacing: 0.1em; margin-top: 2px; }
+
+/* SEARCH */
+.search-section {
+  max-width: 1280px; margin: 0 auto;
+  padding: 0 24px 20px; position: relative; z-index: 1;
+}
+.search-wrap { position: relative; max-width: 500px; margin: 0 auto; }
+.search-wrap input {
+  width: 100%; padding: 14px 50px 14px 46px;
+  background: var(--ink2); border: 1px solid var(--border);
+  border-radius: 50px; color: var(--txt); font-size: 0.95rem;
+  outline: none; transition: all 0.3s; font-family: 'DM Sans', sans-serif;
+}
+.search-wrap input:focus { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(245,200,66,0.1); }
+.search-wrap input::placeholder { color: var(--txt3); }
+.search-icon { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: var(--txt3); font-size: 1rem; pointer-events: none; }
+.search-clear { position: absolute; right: 16px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--txt3); cursor: pointer; font-size: 1rem; display: none; padding: 4px; }
+
+/* TOOLS SECTION */
+.tools-section {
+  max-width: 1280px; margin: 0 auto;
+  padding: 0 24px 60px; position: relative; z-index: 1;
+}
+.cat-header {
+  display: flex; align-items: center; gap: 12px;
+  margin: 36px 0 16px;
+}
+.cat-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.cat-name {
+  font-family: 'Syne', sans-serif;
+  font-size: 0.7rem; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.15em; color: var(--txt2);
+}
+.cat-line { flex: 1; height: 1px; background: linear-gradient(90deg, var(--border), transparent); }
+
+.tools-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  gap: 12px;
+}
+.tool-card {
+  background: var(--ink2); border: 1px solid var(--border);
+  border-radius: var(--r2); padding: 20px 16px;
+  cursor: pointer; transition: all 0.25s;
+  text-align: center; position: relative; overflow: hidden;
+  text-decoration: none; display: block;
+}
+.tool-card::before {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(135deg, rgba(245,200,66,0.04), rgba(45,212,191,0.03));
+  opacity: 0; transition: opacity 0.25s;
+}
+.tool-card:hover {
+  border-color: rgba(245,200,66,0.3);
+  transform: translateY(-4px);
+  box-shadow: 0 12px 32px rgba(0,0,0,0.3), 0 0 0 1px rgba(245,200,66,0.1);
+}
+.tool-card:hover::before { opacity: 1; }
+.tool-card:active { transform: translateY(-2px); }
+.tc-badge {
+  position: absolute; top: 10px; right: 10px;
+  font-size: 0.58rem; font-weight: 700;
+  padding: 2px 8px; border-radius: 20px;
+  letter-spacing: 0.05em; text-transform: uppercase;
+}
+.badge-hot { background: rgba(251,113,133,0.12); color: var(--rose); border: 1px solid rgba(251,113,133,0.2); }
+.badge-new { background: rgba(45,212,191,0.12); color: var(--teal); border: 1px solid rgba(45,212,191,0.2); }
+.badge-pop { background: rgba(245,200,66,0.12); color: var(--gold); border: 1px solid rgba(245,200,66,0.2); }
+.tc-icon { font-size: 2.2rem; margin-bottom: 10px; display: block; position: relative; z-index: 1; }
+.tc-name { font-family: 'Syne', sans-serif; font-size: 0.88rem; font-weight: 700; color: var(--txt); margin-bottom: 4px; position: relative; z-index: 1; }
+.tc-desc { font-size: 0.72rem; color: var(--txt2); line-height: 1.4; position: relative; z-index: 1; }
+
+.no-results { text-align: center; padding: 60px 24px; color: var(--txt3); }
+.no-results .nr-icon { font-size: 3rem; margin-bottom: 12px; }
+
+/* CATEGORY DOTS */
+.dot-organize { background: #a78bfa; }
+.dot-edit { background: var(--teal); }
+.dot-security { background: var(--gold); }
+.dot-convert { background: var(--rose); }
+.dot-utility { background: #34d399; }
+.dot-create { background: #60a5fa; }
+
+/* HOW IT WORKS */
+.how-section {
+  max-width: 1280px; margin: 0 auto;
+  padding: 20px 24px 60px; position: relative; z-index: 1;
+}
+.section-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 1.8rem; font-weight: 800;
+  text-align: center; margin-bottom: 8px;
+}
+.section-sub { color: var(--txt2); text-align: center; font-size: 0.95rem; margin-bottom: 40px; }
+.steps-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }
+.step-card {
+  background: var(--ink2); border: 1px solid var(--border);
+  border-radius: var(--r2); padding: 28px 24px; text-align: center;
+}
+.step-num {
+  width: 44px; height: 44px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--gold), #ff9f43);
+  color: var(--ink); font-family: 'Syne', sans-serif;
+  font-size: 1.1rem; font-weight: 800;
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 14px;
+  box-shadow: 0 4px 16px var(--glow-gold);
+}
+.step-card h3 { font-family: 'Syne', sans-serif; font-size: 1rem; font-weight: 700; margin-bottom: 8px; }
+.step-card p { font-size: 0.85rem; color: var(--txt2); line-height: 1.5; }
+
+@media (max-width: 640px) {
+  .hero { padding: 50px 16px 40px; }
+  .stats { gap: 24px; }
+  .tools-grid { grid-template-columns: repeat(2, 1fr); }
+  .hero-btns { flex-direction: column; align-items: center; }
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-inner">
+    <a class="logo" href="index.html">
+      <div class="logo-mark">P</div>
+      <span class="logo-name">PDF<span>Toolkit</span></span>
+    </a>
+    <div class="nav-links">
+      <a class="nav-link active" href="index.html">All Tools</a>
+      <a class="nav-link" href="organize.html">Organize</a>
+      <a class="nav-link" href="convert.html">Convert</a>
+      <a class="nav-link" href="tool.html?t=merge" class="nav-cta">Try Free →</a>
+    </div>
+  </div>
+</nav>
+
+<section class="hero">
+  <div class="hero-tag"><span class="dot"></span> 25+ Professional PDF Tools</div>
+  <h1>Your Files.<br><em>Your Browser.</em><br>Your Rules.</h1>
+  <p class="hero-sub">Merge, split, compress, convert & edit PDFs entirely in your browser. Zero uploads. Zero servers. 100% private.</p>
+  <div class="hero-btns">
+    <a href="#tools" class="btn btn-gold btn-lg">🚀 Explore All Tools</a>
+    <a href="tool.html?t=merge" class="btn btn-outline btn-lg">Try Merge PDF →</a>
+  </div>
+  <div class="stats">
+    <div class="stat-item"><div class="stat-num">25+</div><div class="stat-lbl">Tools</div></div>
+    <div class="stat-item"><div class="stat-num">0</div><div class="stat-lbl">Uploads</div></div>
+    <div class="stat-item"><div class="stat-num">100%</div><div class="stat-lbl">Private</div></div>
+    <div class="stat-item"><div class="stat-num">Free</div><div class="stat-lbl">Forever</div></div>
+  </div>
+</section>
+
+<section class="search-section">
+  <div class="search-wrap">
+    <span class="search-icon">🔍</span>
+    <input type="text" id="searchInput" placeholder="Search tools… e.g. compress, merge, convert" oninput="filterTools(this.value)" autocomplete="off">
+    <button class="search-clear" id="searchClear" onclick="clearSearch()">✕</button>
+  </div>
+</section>
+
+<section class="tools-section" id="tools">
+  <div id="toolsContainer"></div>
+</section>
+
+<section class="how-section">
+  <h2 class="section-title">How It Works</h2>
+  <p class="section-sub">Three simple steps — no account, no waiting, no cloud.</p>
+  <div class="steps-grid">
+    <div class="step-card">
+      <div class="step-num">1</div>
+      <h3>Pick a Tool</h3>
+      <p>Choose from 25+ PDF tools. Click any card above to open it instantly.</p>
+    </div>
+    <div class="step-card">
+      <div class="step-num">2</div>
+      <h3>Upload Your File</h3>
+      <p>Drag & drop or click the upload area inside the tool. Files stay 100% on your device.</p>
+    </div>
+    <div class="step-card">
+      <div class="step-num">3</div>
+      <h3>Download Result</h3>
+      <p>Click the action button. Your processed PDF downloads instantly to your device.</p>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <p>PDF Toolkit Pro — All processing happens in your browser. Your files never leave your device.</p>
+  <p style="margin-top:6px">Built with <a href="https://pdf-lib.js.org" target="_blank">pdf-lib</a> & <a href="https://mozilla.github.io/pdf.js/" target="_blank">PDF.js</a></p>
+</footer>
+
+<script>
+const CATS = [
+  {id:'organize', name:'Organize', color:'dot-organize'},
+  {id:'edit',     name:'Edit & Annotate', color:'dot-edit'},
+  {id:'security', name:'Security', color:'dot-security'},
+  {id:'convert',  name:'Convert', color:'dot-convert'},
+  {id:'utility',  name:'Utility & View', color:'dot-utility'},
+  {id:'create',   name:'Create', color:'dot-create'},
+];
+
+const TOOLS = [
+  {id:'merge',        icon:'🔗', name:'Merge PDF',       desc:'Combine multiple PDFs into one',          cat:'organize', badge:'pop'},
+  {id:'split',        icon:'✂️', name:'Split PDF',        desc:'Split into separate files or ranges',     cat:'organize'},
+  {id:'removepages',  icon:'🗑️', name:'Remove Pages',     desc:'Delete specific pages visually',          cat:'organize'},
+  {id:'reorder',      icon:'↕️', name:'Reorder Pages',    desc:'Rearrange pages in any order',            cat:'organize'},
+  {id:'rotate',       icon:'🔄', name:'Rotate Pages',     desc:'Rotate pages 90°/180°/270°',              cat:'organize'},
+  {id:'reverse',      icon:'🔁', name:'Reverse Pages',    desc:'Flip the entire page order',              cat:'organize'},
+  {id:'pagenumber',   icon:'🔢', name:'Add Page Numbers', desc:'Customizable numbering & position',       cat:'edit'},
+  {id:'watermark',    icon:'💧', name:'Watermark PDF',    desc:'Text watermarks in any style',            cat:'edit'},
+  {id:'crop',         icon:'⬛', name:'Crop PDF',         desc:'Trim page margins precisely',             cat:'edit'},
+  {id:'flatten',      icon:'📋', name:'Flatten PDF',      desc:'Flatten forms & annotations',             cat:'edit'},
+  {id:'metadata',     icon:'🏷️', name:'Edit Metadata',    desc:'Change title, author, keywords',          cat:'edit'},
+  {id:'extracttext',  icon:'📄', name:'Extract Text',     desc:'Extract text from specific pages',        cat:'edit'},
+  {id:'protect',      icon:'🔐', name:'Protect PDF',      desc:'Add document restrictions',               cat:'security', badge:'hot'},
+  {id:'unlock',       icon:'🔓', name:'Unlock PDF',       desc:'Remove PDF restrictions',                 cat:'security'},
+  {id:'compress',     icon:'🗜️', name:'Compress PDF',     desc:'Reduce file size efficiently',            cat:'convert', badge:'pop'},
+  {id:'grayscale',    icon:'⬛', name:'Grayscale PDF',    desc:'Convert to black & white',                cat:'convert'},
+  {id:'pdf2img',      icon:'🖼️', name:'PDF → Images',     desc:'Export pages as JPG/PNG',                 cat:'convert'},
+  {id:'img2pdf',      icon:'📷', name:'Images → PDF',     desc:'Combine images into PDF',                 cat:'convert'},
+  {id:'pdf2text',     icon:'📝', name:'PDF → Text',       desc:'Extract all text content',                cat:'convert'},
+  {id:'extractimages',icon:'🎨', name:'Extract Images',   desc:'Save all page images',                    cat:'convert'},
+  {id:'html2pdf',     icon:'🌐', name:'HTML → PDF',       desc:'Convert HTML to PDF via print',           cat:'convert'},
+  {id:'viewer',       icon:'👁️', name:'PDF Viewer',       desc:'Full-featured in-browser viewer',         cat:'utility', badge:'new'},
+  {id:'compare',      icon:'🔍', name:'Compare PDFs',     desc:'Find text differences',                   cat:'utility'},
+  {id:'repair',       icon:'🔧', name:'Repair PDF',       desc:'Fix corrupted PDF files',                 cat:'utility'},
+  {id:'blank',        icon:'➕', name:'Create Blank PDF', desc:'New PDF with custom settings',            cat:'create'},
+];
+
+const BADGES = {
+  hot:  `<span class="tc-badge badge-hot">🔥 Hot</span>`,
+  new:  `<span class="tc-badge badge-new">✨ New</span>`,
+  pop:  `<span class="tc-badge badge-pop">⭐ Popular</span>`,
+};
+
+function toolCardHTML(t) {
+  return `<a class="tool-card anim-up" href="tool.html?t=${t.id}" style="animation-delay:${Math.random()*0.15}s">
+    ${t.badge ? BADGES[t.badge] : ''}
+    <span class="tc-icon">${t.icon}</span>
+    <div class="tc-name">${t.name}</div>
+    <div class="tc-desc">${t.desc}</div>
+  </a>`;
+}
+
+function renderHome(filter = '') {
+  const c = document.getElementById('toolsContainer');
+  let html = '', total = 0;
+  CATS.forEach(cat => {
+    const tools = TOOLS.filter(t => t.cat === cat.id && (!filter ||
+      t.name.toLowerCase().includes(filter) ||
+      t.desc.toLowerCase().includes(filter) ||
+      t.id.includes(filter)));
+    if (!tools.length) return;
+    total += tools.length;
+    html += `<div class="cat-header">
+      <div class="cat-dot ${cat.color}"></div>
+      <div class="cat-name">${cat.name}</div>
+      <div class="cat-line"></div>
+    </div>
+    <div class="tools-grid">${tools.map(toolCardHTML).join('')}</div>`;
+  });
+  if (!total) html = `<div class="no-results"><div class="nr-icon">🔍</div><div>No tools found for "<strong>${filter}</strong>"</div></div>`;
+  c.innerHTML = html;
+}
+
+function filterTools(v) {
+  document.getElementById('searchClear').style.display = v ? 'block' : 'none';
+  renderHome(v.toLowerCase());
+}
+function clearSearch() {
+  document.getElementById('searchInput').value = '';
+  filterTools('');
+}
+
+renderHome();
+</script>
+</body>
+</html>

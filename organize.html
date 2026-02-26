@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Organize PDFs — PDF Toolkit Pro</title>
+<link rel="stylesheet" href="style.css">
+<style>
+.page-wrap { max-width: 1280px; margin: 0 auto; padding: 48px 24px 60px; position: relative; z-index: 1; }
+.page-hero { margin-bottom: 48px; }
+.page-hero h1 { font-family: 'Syne', sans-serif; font-size: clamp(2rem,5vw,3.5rem); font-weight: 900; margin-bottom: 12px; letter-spacing: -0.03em; }
+.page-hero h1 span { color: var(--gold); }
+.page-hero p { color: var(--txt2); font-size: 1rem; max-width: 500px; line-height: 1.6; }
+.tool-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+.tool-row {
+  background: var(--ink2); border: 1px solid var(--border);
+  border-radius: var(--r2); padding: 24px;
+  display: flex; align-items: center; gap: 16px;
+  text-decoration: none; transition: all 0.25s;
+}
+.tool-row:hover { border-color: rgba(245,200,66,0.3); transform: translateX(4px); box-shadow: 0 4px 24px rgba(0,0,0,0.2); }
+.tool-row-icon {
+  width: 52px; height: 52px; flex-shrink: 0;
+  background: linear-gradient(135deg, rgba(245,200,66,0.15), rgba(255,159,67,0.1));
+  border: 1px solid rgba(245,200,66,0.15);
+  border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 1.6rem;
+}
+.tool-row-info h3 { font-family: 'Syne', sans-serif; font-size: 1rem; font-weight: 700; margin-bottom: 4px; }
+.tool-row-info p { font-size: 0.82rem; color: var(--txt2); line-height: 1.4; }
+.tool-row-arrow { margin-left: auto; color: var(--txt3); font-size: 1.2rem; flex-shrink: 0; transition: all 0.2s; }
+.tool-row:hover .tool-row-arrow { color: var(--gold); transform: translateX(4px); }
+@media(max-width:640px){ .page-wrap { padding: 28px 16px 40px; } }
+</style>
+</head>
+<body>
+<nav>
+  <div class="nav-inner">
+    <a class="logo" href="index.html">
+      <div class="logo-mark">P</div>
+      <span class="logo-name">PDF<span>Toolkit</span></span>
+    </a>
+    <div class="nav-links">
+      <a class="nav-link" href="index.html">All Tools</a>
+      <a class="nav-link active" href="organize.html">Organize</a>
+      <a class="nav-link" href="convert.html">Convert</a>
+    </div>
+  </div>
+</nav>
+
+<div class="page-wrap">
+  <div class="page-hero anim-up">
+    <div style="display:inline-flex;align-items:center;gap:8px;background:rgba(167,139,250,0.1);border:1px solid rgba(167,139,250,0.2);color:#a78bfa;font-size:.75rem;font-weight:700;padding:6px 16px;border-radius:50px;margin-bottom:20px;letter-spacing:.06em;text-transform:uppercase">
+      ↕️ Organize Tools
+    </div>
+    <h1>Organize Your <span>PDF Pages</span></h1>
+    <p>Merge, split, remove, reorder and rotate pages in your PDFs. All tools run entirely in your browser — nothing is uploaded.</p>
+  </div>
+
+  <div class="tool-list">
+    <a class="tool-row" href="tool.html?t=merge">
+      <div class="tool-row-icon">🔗</div>
+      <div class="tool-row-info">
+        <h3>Merge PDF</h3>
+        <p>Combine multiple PDF files into one document</p>
+      </div>
+      <span class="tool-row-arrow">→</span>
+    </a>
+    <a class="tool-row" href="tool.html?t=split">
+      <div class="tool-row-icon">✂️</div>
+      <div class="tool-row-info">
+        <h3>Split PDF</h3>
+        <p>Split into separate files or custom page ranges</p>
+      </div>
+      <span class="tool-row-arrow">→</span>
+    </a>
+    <a class="tool-row" href="tool.html?t=removepages">
+      <div class="tool-row-icon">🗑️</div>
+      <div class="tool-row-info">
+        <h3>Remove Pages</h3>
+        <p>Delete specific pages with visual preview</p>
+      </div>
+      <span class="tool-row-arrow">→</span>
+    </a>
+    <a class="tool-row" href="tool.html?t=reorder">
+      <div class="tool-row-icon">↕️</div>
+      <div class="tool-row-info">
+        <h3>Reorder Pages</h3>
+        <p>Rearrange pages in any order you want</p>
+      </div>
+      <span class="tool-row-arrow">→</span>
+    </a>
+    <a class="tool-row" href="tool.html?t=rotate">
+      <div class="tool-row-icon">🔄</div>
+      <div class="tool-row-info">
+        <h3>Rotate Pages</h3>
+        <p>Rotate pages 90°, 180° or 270°</p>
+      </div>
+      <span class="tool-row-arrow">→</span>
+    </a>
+    <a class="tool-row" href="tool.html?t=reverse">
+      <div class="tool-row-icon">🔁</div>
+      <div class="tool-row-info">
+        <h3>Reverse Pages</h3>
+        <p>Flip the entire page order of a PDF</p>
+      </div>
+      <span class="tool-row-arrow">→</span>
+    </a>
+  </div>
+
+  <div style="margin-top:48px;text-align:center">
+    <a href="index.html" class="btn btn-outline">← View All 25+ Tools</a>
+  </div>
+</div>
+
+<footer>
+  <p>PDF Toolkit Pro — Files never leave your device · <a href="index.html">All Tools</a></p>
+</footer>
+</body>
+</html>

@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Convert PDFs — PDF Toolkit Pro</title>
+<link rel="stylesheet" href="style.css">
+<style>
+.page-wrap { max-width: 1280px; margin: 0 auto; padding: 48px 24px 60px; position: relative; z-index: 1; }
+.page-hero { margin-bottom: 48px; }
+.page-hero h1 { font-family: 'Syne', sans-serif; font-size: clamp(2rem,5vw,3.5rem); font-weight: 900; margin-bottom: 12px; letter-spacing: -0.03em; }
+.page-hero h1 span { color: var(--teal); }
+.page-hero p { color: var(--txt2); font-size: 1rem; max-width: 500px; line-height: 1.6; }
+.tool-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+.tool-row {
+  background: var(--ink2); border: 1px solid var(--border);
+  border-radius: var(--r2); padding: 24px;
+  display: flex; align-items: center; gap: 16px;
+  text-decoration: none; transition: all 0.25s;
+}
+.tool-row:hover { border-color: rgba(45,212,191,0.3); transform: translateX(4px); box-shadow: 0 4px 24px rgba(0,0,0,0.2); }
+.tool-row-icon {
+  width: 52px; height: 52px; flex-shrink: 0;
+  background: linear-gradient(135deg, rgba(45,212,191,0.15), rgba(13,148,136,0.1));
+  border: 1px solid rgba(45,212,191,0.15);
+  border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 1.6rem;
+}
+.tool-row-info h3 { font-family: 'Syne', sans-serif; font-size: 1rem; font-weight: 700; margin-bottom: 4px; }
+.tool-row-info p { font-size: 0.82rem; color: var(--txt2); line-height: 1.4; }
+.tool-row-arrow { margin-left: auto; color: var(--txt3); font-size: 1.2rem; flex-shrink: 0; transition: all 0.2s; }
+.tool-row:hover .tool-row-arrow { color: var(--teal); transform: translateX(4px); }
+@media(max-width:640px){ .page-wrap { padding: 28px 16px 40px; } }
+</style>
+</head>
+<body>
+<nav>
+  <div class="nav-inner">
+    <a class="logo" href="index.html">
+      <div class="logo-mark">P</div>
+      <span class="logo-name">PDF<span>Toolkit</span></span>
+    </a>
+    <div class="nav-links">
+      <a class="nav-link" href="index.html">All Tools</a>
+      <a class="nav-link" href="organize.html">Organize</a>
+      <a class="nav-link active" href="convert.html">Convert</a>
+    </div>
+  </div>
+</nav>
+
+<div class="page-wrap">
+  <div class="page-hero anim-up">
+    <div style="display:inline-flex;align-items:center;gap:8px;background:rgba(45,212,191,0.1);border:1px solid rgba(45,212,191,0.2);color:var(--teal);font-size:.75rem;font-weight:700;padding:6px 16px;border-radius:50px;margin-bottom:20px;letter-spacing:.06em;text-transform:uppercase">
+      🔄 Convert Tools
+    </div>
+    <h1>Convert <span>To & From PDF</span></h1>
+    <p>Convert PDFs to images, text, and back. All conversion happens locally in your browser — no file uploads ever.</p>
+  </div>
+
+  <div class="tool-list">
+    <a class="tool-row" href="tool.html?t=compress">
+      <div class="tool-row-icon">🗜️</div>
+      <div class="tool-row-info">
+        <h3>Compress PDF</h3>
+        <p>Reduce file size by optimising PDF structure</p>
+      </div>
+      <span class="tool-row-arrow">→</span>
+    </a>
+    <a class="tool-row" href="tool.html?t=grayscale">
+      <div class="tool-row-icon">⬛</div>
+      <div class="tool-row-info">
+        <h3>Grayscale PDF</h3>
+        <p>Convert colour PDF to black & white</p>
+      </div>
+      <span class="tool-row-arrow">→</span>
+    </a>
+    <a class="tool-row" href="tool.html?t=pdf2img">
+      <div class="tool-row-icon">🖼️</div>
+      <div class="tool-row-info">
+        <h3>PDF → Images</h3>
+        <p>Export PDF pages as JPG or PNG images</p>
+      </div>
+      <span class="tool-row-arrow">→</span>
+    </a>
+    <a class="tool-row" href="tool.html?t=img2pdf">
+      <div class="tool-row-icon">📷</div>
+      <div class="tool-row-info">
+        <h3>Images → PDF</h3>
+        <p>Combine multiple images into one PDF</p>
+      </div>
+      <span class="tool-row-arrow">→</span>
+    </a>
+    <a class="tool-row" href="tool.html?t=pdf2text">
+      <div class="tool-row-icon">📝</div>
+      <div class="tool-row-info">
+        <h3>PDF → Text</h3>
+        <p>Extract all text content from a PDF</p>
+      </div>
+      <span class="tool-row-arrow">→</span>
+    </a>
+    <a class="tool-row" href="tool.html?t=extractimages">
+      <div class="tool-row-icon">🎨</div>
+      <div class="tool-row-info">
+        <h3>Extract Images</h3>
+        <p>Save every PDF page as a JPG image</p>
+      </div>
+      <span class="tool-row-arrow">→</span>
+    </a>
+    <a class="tool-row" href="tool.html?t=html2pdf">
+      <div class="tool-row-icon">🌐</div>
+      <div class="tool-row-info">
+        <h3>HTML → PDF</h3>
+        <p>Convert HTML content to PDF via print</p>
+      </div>
+      <span class="tool-row-arrow">→</span>
+    </a>
+  </div>
+
+  <div style="margin-top:48px;text-align:center">
+    <a href="index.html" class="btn btn-outline">← View All 25+ Tools</a>
+  </div>
+</div>
+
+<footer>
+  <p>PDF Toolkit Pro — Files never leave your device · <a href="index.html">All Tools</a></p>
+</footer>
+</body>
+</html>

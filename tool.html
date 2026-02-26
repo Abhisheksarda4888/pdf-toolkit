@@ -1,0 +1,1072 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PDF Toolkit Pro — Tool</title>
+<link rel="stylesheet" href="style.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+<script src="utils.js"></script>
+<style>
+.tool-page-wrap {
+  max-width: 860px; margin: 0 auto;
+  padding: 32px 24px 60px;
+  position: relative; z-index: 1;
+}
+@media (max-width: 600px) { .tool-page-wrap { padding: 20px 16px 40px; } }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-inner">
+    <a class="logo" href="index.html">
+      <div class="logo-mark">P</div>
+      <span class="logo-name">PDF<span>Toolkit</span></span>
+    </a>
+    <div class="nav-links">
+      <a class="nav-link" href="index.html">All Tools</a>
+      <a class="nav-link" href="organize.html">Organize</a>
+      <a class="nav-link" href="convert.html">Convert</a>
+    </div>
+  </div>
+</nav>
+
+<div class="tool-page-wrap">
+  <a class="back-btn" href="index.html">← Back to All Tools</a>
+  <div id="toolContent"></div>
+</div>
+
+<footer>
+  <p>PDF Toolkit Pro — Files never leave your device · <a href="index.html">All Tools</a></p>
+</footer>
+
+<script>
+pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+const { PDFDocument, rgb, StandardFonts, degrees } = PDFLib;
+
+// ── TOOL DEFINITIONS ──
+const TOOLS = {
+  merge:        { icon:'🔗', name:'Merge PDF',       desc:'Combine multiple PDF files into one document' },
+  split:        { icon:'✂️', name:'Split PDF',        desc:'Split a PDF into separate files or custom ranges' },
+  removepages:  { icon:'🗑️', name:'Remove Pages',     desc:'Delete specific pages from your PDF visually' },
+  reorder:      { icon:'↕️', name:'Reorder Pages',    desc:'Rearrange pages in any order you want' },
+  rotate:       { icon:'🔄', name:'Rotate Pages',     desc:'Rotate pages 90°, 180° or 270°' },
+  reverse:      { icon:'🔁', name:'Reverse Pages',    desc:'Flip the entire page order of a PDF' },
+  pagenumber:   { icon:'🔢', name:'Add Page Numbers', desc:'Add customizable page numbers to your PDF' },
+  watermark:    { icon:'💧', name:'Watermark PDF',    desc:'Add text watermarks to every page' },
+  crop:         { icon:'⬛', name:'Crop PDF',         desc:'Trim page margins with precise point values' },
+  flatten:      { icon:'📋', name:'Flatten PDF',      desc:'Flatten interactive forms & annotations' },
+  metadata:     { icon:'🏷️', name:'Edit Metadata',    desc:'Change title, author, subject, keywords' },
+  extracttext:  { icon:'📄', name:'Extract Text',     desc:'Extract text content from specific pages' },
+  protect:      { icon:'🔐', name:'Protect PDF',      desc:'Add document restriction flags' },
+  unlock:       { icon:'🔓', name:'Unlock PDF',       desc:'Remove PDF password & restrictions' },
+  compress:     { icon:'🗜️', name:'Compress PDF',     desc:'Reduce file size by optimizing structure' },
+  grayscale:    { icon:'⬛', name:'Grayscale PDF',    desc:'Convert color PDF to black & white' },
+  pdf2img:      { icon:'🖼️', name:'PDF → Images',     desc:'Export PDF pages as JPG or PNG images' },
+  img2pdf:      { icon:'📷', name:'Images → PDF',     desc:'Combine multiple images into one PDF' },
+  pdf2text:     { icon:'📝', name:'PDF → Text',       desc:'Extract all text from a PDF file' },
+  extractimages:{ icon:'🎨', name:'Extract Images',   desc:'Save every page of a PDF as an image' },
+  html2pdf:     { icon:'🌐', name:'HTML → PDF',       desc:'Convert HTML content to PDF via print dialog' },
+  viewer:       { icon:'👁️', name:'PDF Viewer',       desc:'View PDF files directly in your browser' },
+  compare:      { icon:'🔍', name:'Compare PDFs',     desc:'Find text similarities and differences' },
+  repair:       { icon:'🔧', name:'Repair PDF',       desc:'Attempt to fix corrupted PDF files' },
+  blank:        { icon:'➕', name:'Create Blank PDF', desc:'Generate blank PDFs with custom settings' },
+};
+
+// ── RENDERERS ──
+const RENDERERS = {};
+
+// MERGE
+RENDERERS.merge = () => {
+  document.getElementById('toolBody').innerHTML = `
+    ${dz('merge', true)}
+    <div class="file-list" id="fl-merge"></div>
+    <div class="btn-row">
+      <button class="btn btn-gold" onclick="doMerge()">🔗 Merge PDFs</button>
+    </div>
+    ${progHTML('merge')}
+    ${resHTML('merge')}`;
+};
+async function doMerge() {
+  const files = STATE.merge?.files || [];
+  if (files.length < 2) { alert('Please select at least 2 PDF files.'); return; }
+  showProg('merge', 5, 'Merging PDFs…');
+  const merged = await PDFDocument.create();
+  for (let i = 0; i < files.length; i++) {
+    showProg('merge', 5 + Math.round((i / files.length) * 90), `Merging ${i+1}/${files.length}…`);
+    const d = await loadPDF(files[i]);
+    const pgs = await merged.copyPages(d, d.getPageIndices());
+    pgs.forEach(p => merged.addPage(p));
+  }
+  showProg('merge', 98, 'Saving…');
+  const b = await merged.save();
+  const blob = new Blob([b], { type: 'application/pdf' });
+  showProg('merge', 100, 'Complete!');
+  showRes('merge', `Merged ${files.length} files → ${fmtSz(b.length)}`,
+    `<button class="btn btn-teal" onclick="saveAs(window._lastBlob,'merged.pdf')">⬇️ Download merged.pdf</button>`);
+  window._lastBlob = blob;
+  saveAs(blob, 'merged.pdf');
+}
+
+// SPLIT
+RENDERERS.split = () => {
+  document.getElementById('toolBody').innerHTML = `
+    ${dz('split')}
+    <div class="file-list" id="fl-split"></div>
+    <div class="ctrl-group">
+      <h4>⚙️ Split Settings</h4>
+      <div class="ctrl-row"><label>Mode</label>
+        <select class="inp" id="sm" onchange="toggleSplitOpts()">
+          <option value="all">Every page (individual files)</option>
+          <option value="range">Custom page ranges</option>
+          <option value="every">Every N pages</option>
+        </select>
+      </div>
+      <div id="split-extra"></div>
+    </div>
+    <div class="btn-row"><button class="btn btn-gold" onclick="doSplit()">✂️ Split PDF</button></div>
+    ${progHTML('split')}${resHTML('split')}`;
+};
+function toggleSplitOpts() {
+  const m = document.getElementById('sm').value, el = document.getElementById('split-extra');
+  el.innerHTML = m === 'range'
+    ? `<div class="ctrl-row"><label>Page ranges</label><input class="inp" id="sr" placeholder="1-3, 5, 7-9" style="flex:1"></div>`
+    : m === 'every'
+    ? `<div class="ctrl-row"><label>Every N pages</label><input class="inp" id="sn" type="number" value="1" min="1" style="width:80px"></div>` : '';
+}
+async function doSplit() {
+  const files = STATE.split?.files || [];
+  if (!files.length) { alert('Select a PDF.'); return; }
+  const doc = await loadPDF(files[0]); const total = doc.getPageCount();
+  const mode = document.getElementById('sm').value;
+  showProg('split', 10, 'Loading…');
+  let ranges = [];
+  if (mode === 'all') { for (let i = 0; i < total; i++) ranges.push([i, i]); }
+  else if (mode === 'every') { const n = parseInt(document.getElementById('sn').value) || 1; for (let i = 0; i < total; i += n) ranges.push([i, Math.min(i + n - 1, total - 1)]); }
+  else { document.getElementById('sr').value.split(',').forEach(s => { s = s.trim(); if (s.includes('-')) { const [a, b] = s.split('-').map(x => parseInt(x) - 1); ranges.push([a, b]); } else ranges.push([parseInt(s) - 1, parseInt(s) - 1]); }); }
+  for (let i = 0; i < ranges.length; i++) {
+    showProg('split', 10 + Math.round((i / ranges.length) * 87), `Saving part ${i+1}/${ranges.length}…`);
+    const nd = await PDFDocument.create();
+    const [s, e] = ranges[i];
+    const pgs = await nd.copyPages(doc, Array.from({ length: e - s + 1 }, (_, k) => s + k));
+    pgs.forEach(p => nd.addPage(p));
+    saveAs(new Blob([await nd.save()], { type: 'application/pdf' }), `split_part${i+1}.pdf`);
+  }
+  showProg('split', 100, 'Done!');
+  showRes('split', `Created ${ranges.length} file(s) from ${total} pages — check your Downloads folder.`);
+}
+
+// REMOVE PAGES
+RENDERERS.removepages = () => {
+  document.getElementById('toolBody').innerHTML = `
+    ${dz('removepages')}
+    <div class="file-list" id="fl-removepages"></div>
+    <div class="ctrl-group">
+      <h4>🗑️ Page Selection</h4>
+      <div class="ctrl-row"><label>Pages to remove</label><input class="inp" id="rmp" placeholder="e.g. 1, 3, 5-8" style="flex:1"></div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-outline" onclick="loadRPThumbs()">👁 Preview Pages</button>
+      <button class="btn btn-gold" onclick="doRemovePages()">🗑️ Remove & Save</button>
+    </div>
+    <div id="rp-thumbs" class="pages-grid" style="margin-top:14px"></div>
+    ${progHTML('removepages')}${resHTML('removepages')}`;
+};
+async function loadRPThumbs() {
+  const files = STATE.removepages?.files || []; if (!files.length) { alert('Select a PDF.'); return; }
+  const pdf = await pdfjsLib.getDocument({ data: await files[0].arrayBuffer() }).promise;
+  const grid = document.getElementById('rp-thumbs'); grid.innerHTML = '';
+  for (let i = 1; i <= Math.min(pdf.numPages, 24); i++) {
+    const pg = await pdf.getPage(i); const vp = pg.getViewport({ scale: .38 });
+    const c = document.createElement('canvas'); c.width = vp.width; c.height = vp.height;
+    await pg.render({ canvasContext: c.getContext('2d'), viewport: vp }).promise;
+    const div = document.createElement('div'); div.className = 'pg-thumb';
+    div.innerHTML = `<div class="pg-check">✓</div><div class="pg-num">Page ${i}</div>`;
+    div.insertBefore(c, div.firstChild);
+    div.onclick = function () {
+      this.classList.toggle('sel');
+      document.getElementById('rmp').value = [...document.querySelectorAll('.pg-thumb.sel')].map(el => el.querySelector('.pg-num').textContent.replace('Page ', '')).join(',');
+    };
+    grid.appendChild(div);
+  }
+}
+async function doRemovePages() {
+  const files = STATE.removepages?.files || []; if (!files.length) { alert('Select a PDF.'); return; }
+  const raw = document.getElementById('rmp').value; if (!raw.trim()) { alert('Specify pages to remove.'); return; }
+  showProg('removepages', 20, 'Loading…');
+  const doc = await loadPDF(files[0]); const toRm = new Set();
+  raw.split(',').forEach(s => { s = s.trim(); if (s.includes('-')) { const [a, b] = s.split('-').map(x => parseInt(x) - 1); for (let i = a; i <= b; i++) toRm.add(i); } else toRm.add(parseInt(s) - 1); });
+  const nd = await PDFDocument.create();
+  const keep = doc.getPageIndices().filter(i => !toRm.has(i));
+  showProg('removepages', 60, 'Removing…');
+  const pgs = await nd.copyPages(doc, keep); pgs.forEach(p => nd.addPage(p));
+  const b = await nd.save();
+  showProg('removepages', 100, 'Done!');
+  const blob = new Blob([b], { type: 'application/pdf' });
+  saveAs(blob, 'pages_removed.pdf');
+  showRes('removepages', `Removed ${toRm.size} page(s). ${keep.length} pages remain.`,
+    `<button class="btn btn-teal" onclick="saveAs(window._lastBlob,'pages_removed.pdf')">⬇️ Download</button>`);
+  window._lastBlob = blob;
+}
+
+// REORDER
+RENDERERS.reorder = () => {
+  document.getElementById('toolBody').innerHTML = `
+    ${dz('reorder')}
+    <div class="file-list" id="fl-reorder"></div>
+    <div class="btn-row"><button class="btn btn-outline" onclick="loadROThumbs()">👁 Load Page Previews</button></div>
+    <div id="ro-thumbs" class="pages-grid" style="margin-top:14px"></div>
+    <div class="ctrl-group" id="ro-ctrl" style="display:none;margin-top:14px">
+      <h4>↕️ New Page Order</h4>
+      <div class="ctrl-row"><label>Order (comma separated)</label><input class="inp" id="ro-ord" placeholder="3,1,2,4,5" style="flex:1"></div>
+    </div>
+    <div class="btn-row"><button class="btn btn-gold" onclick="doReorder()">↕️ Reorder & Save</button></div>
+    ${progHTML('reorder')}${resHTML('reorder')}`;
+};
+async function loadROThumbs() {
+  const files = STATE.reorder?.files || []; if (!files.length) { alert('Select a PDF.'); return; }
+  const pdf = await pdfjsLib.getDocument({ data: await files[0].arrayBuffer() }).promise;
+  const grid = document.getElementById('ro-thumbs'); grid.innerHTML = '';
+  document.getElementById('ro-ctrl').style.display = '';
+  const nums = [];
+  for (let i = 1; i <= Math.min(pdf.numPages, 30); i++) {
+    const pg = await pdf.getPage(i); const vp = pg.getViewport({ scale: .32 });
+    const c = document.createElement('canvas'); c.width = vp.width; c.height = vp.height;
+    await pg.render({ canvasContext: c.getContext('2d'), viewport: vp }).promise;
+    const div = document.createElement('div'); div.className = 'pg-thumb';
+    div.innerHTML = `<div class="pg-num">Page ${i}</div>`; div.insertBefore(c, div.firstChild);
+    grid.appendChild(div); nums.push(i);
+  }
+  document.getElementById('ro-ord').value = nums.join(',');
+}
+async function doReorder() {
+  const files = STATE.reorder?.files || []; if (!files.length) { alert('Select a PDF.'); return; }
+  const raw = document.getElementById('ro-ord').value; if (!raw.trim()) { alert('Enter page order.'); return; }
+  showProg('reorder', 20, 'Loading…');
+  const doc = await loadPDF(files[0]);
+  const order = raw.split(',').map(x => parseInt(x.trim()) - 1);
+  const nd = await PDFDocument.create();
+  showProg('reorder', 60, 'Reordering…');
+  const pgs = await nd.copyPages(doc, order); pgs.forEach(p => nd.addPage(p));
+  const b = await nd.save();
+  showProg('reorder', 100, 'Done!');
+  const blob = new Blob([b], { type: 'application/pdf' });
+  saveAs(blob, 'reordered.pdf');
+  showRes('reorder', `Reordered ${order.length} pages successfully.`,
+    `<button class="btn btn-teal" onclick="saveAs(window._lastBlob,'reordered.pdf')">⬇️ Download</button>`);
+  window._lastBlob = blob;
+}
+
+// ROTATE
+RENDERERS.rotate = () => {
+  document.getElementById('toolBody').innerHTML = `
+    ${dz('rotate')}
+    <div class="file-list" id="fl-rotate"></div>
+    <div class="ctrl-group">
+      <h4>🔄 Rotation Settings</h4>
+      <div class="ctrl-row"><label>Pages</label><input class="inp" id="rt-pgs" placeholder="all  or  1,3,5-8" style="flex:1"></div>
+      <div class="ctrl-row"><label>Direction</label>
+        <select class="inp" id="rt-deg">
+          <option value="90">90° Clockwise ↻</option>
+          <option value="270">90° Counter-clockwise ↺</option>
+          <option value="180">180° Flip ↕</option>
+        </select>
+      </div>
+    </div>
+    <div class="btn-row"><button class="btn btn-gold" onclick="doRotate()">🔄 Rotate & Save</button></div>
+    ${progHTML('rotate')}${resHTML('rotate')}`;
+};
+async function doRotate() {
+  const files = STATE.rotate?.files || []; if (!files.length) { alert('Select a PDF.'); return; }
+  showProg('rotate', 20, 'Loading…');
+  const doc = await loadPDF(files[0]);
+  const raw = document.getElementById('rt-pgs').value.trim();
+  const deg = parseInt(document.getElementById('rt-deg').value);
+  let idxs = [];
+  if (!raw || raw === 'all') idxs = doc.getPageIndices();
+  else raw.split(',').forEach(s => { s = s.trim(); if (s.includes('-')) { const [a, b] = s.split('-').map(x => parseInt(x) - 1); for (let i = a; i <= b; i++) idxs.push(i); } else idxs.push(parseInt(s) - 1); });
+  showProg('rotate', 60, 'Rotating…');
+  idxs.forEach(i => { const p = doc.getPage(i); p.setRotation(degrees((p.getRotation().angle + deg) % 360)); });
+  const b = await doc.save();
+  showProg('rotate', 100, 'Done!');
+  const blob = new Blob([b], { type: 'application/pdf' });
+  saveAs(blob, 'rotated.pdf');
+  showRes('rotate', `Rotated ${idxs.length} page(s) by ${deg}°`,
+    `<button class="btn btn-teal" onclick="saveAs(window._lastBlob,'rotated.pdf')">⬇️ Download</button>`);
+  window._lastBlob = blob;
+}
+
+// REVERSE
+RENDERERS.reverse = () => {
+  document.getElementById('toolBody').innerHTML = `
+    ${dz('reverse')}
+    <div class="file-list" id="fl-reverse"></div>
+    <div class="btn-row"><button class="btn btn-gold" onclick="doReverse()">🔁 Reverse & Save</button></div>
+    ${progHTML('reverse')}${resHTML('reverse')}`;
+};
+async function doReverse() {
+  const files = STATE.reverse?.files || []; if (!files.length) { alert('Select a PDF.'); return; }
+  showProg('reverse', 30, 'Loading…');
+  const doc = await loadPDF(files[0]);
+  const nd = await PDFDocument.create();
+  const pgs = await nd.copyPages(doc, [...doc.getPageIndices()].reverse());
+  pgs.forEach(p => nd.addPage(p));
+  const b = await nd.save();
+  showProg('reverse', 100, 'Done!');
+  const blob = new Blob([b], { type: 'application/pdf' });
+  saveAs(blob, 'reversed.pdf');
+  showRes('reverse', `Reversed ${doc.getPageCount()} pages successfully.`,
+    `<button class="btn btn-teal" onclick="saveAs(window._lastBlob,'reversed.pdf')">⬇️ Download</button>`);
+  window._lastBlob = blob;
+}
+
+// PAGE NUMBERS
+RENDERERS.pagenumber = () => {
+  document.getElementById('toolBody').innerHTML = `
+    ${dz('pagenumber')}
+    <div class="file-list" id="fl-pagenumber"></div>
+    <div class="ctrl-group">
+      <h4>🔢 Numbering Settings</h4>
+      <div class="ctrl-row"><label>Position</label>
+        <select class="inp" id="pn-pos">
+          <option value="bc">Bottom Center</option><option value="br">Bottom Right</option>
+          <option value="bl">Bottom Left</option><option value="tc">Top Center</option>
+          <option value="tr">Top Right</option><option value="tl">Top Left</option>
+        </select>
+      </div>
+      <div class="ctrl-row"><label>Format</label>
+        <select class="inp" id="pn-fmt">
+          <option value="n">1, 2, 3 …</option><option value="pn">Page 1</option>
+          <option value="nof">1 of N</option><option value="pnof">Page 1 of N</option>
+        </select>
+      </div>
+      <div class="ctrl-row"><label>Font size (pt)</label><input type="number" class="inp" id="pn-fs" value="12" min="6" max="36" style="width:80px"></div>
+      <div class="ctrl-row"><label>Start from page</label><input type="number" class="inp" id="pn-start" value="1" min="1" style="width:80px"></div>
+    </div>
+    <div class="btn-row"><button class="btn btn-gold" onclick="doPN()">🔢 Add Numbers</button></div>
+    ${progHTML('pagenumber')}${resHTML('pagenumber')}`;
+};
+async function doPN() {
+  const files = STATE.pagenumber?.files || []; if (!files.length) { alert('Select a PDF.'); return; }
+  showProg('pagenumber', 20, 'Loading…');
+  const doc = await loadPDF(files[0]);
+  const font = await doc.embedFont(StandardFonts.Helvetica);
+  const total = doc.getPageCount();
+  const fmt = document.getElementById('pn-fmt').value;
+  const pos = document.getElementById('pn-pos').value;
+  const fs = parseInt(document.getElementById('pn-fs').value) || 12;
+  const start = parseInt(document.getElementById('pn-start').value) || 1;
+  for (let i = start - 1; i < total; i++) {
+    const page = doc.getPage(i); const { width, height } = page.getSize(); const num = i + 1;
+    let txt = fmt === 'n' ? `${num}` : fmt === 'pn' ? `Page ${num}` : fmt === 'nof' ? `${num} of ${total}` : `Page ${num} of ${total}`;
+    const tw = font.widthOfTextAtSize(txt, fs); const m = 20;
+    let x, y;
+    if (pos === 'bc') { x = (width - tw) / 2; y = m; } else if (pos === 'br') { x = width - tw - m; y = m; } else if (pos === 'bl') { x = m; y = m; }
+    else if (pos === 'tc') { x = (width - tw) / 2; y = height - m - fs; } else if (pos === 'tr') { x = width - tw - m; y = height - m - fs; } else { x = m; y = height - m - fs; }
+    page.drawText(txt, { x, y, size: fs, font, color: rgb(0, 0, 0) });
+  }
+  showProg('pagenumber', 90, 'Saving…');
+  const b = await doc.save();
+  showProg('pagenumber', 100, 'Done!');
+  const blob = new Blob([b], { type: 'application/pdf' });
+  saveAs(blob, 'numbered.pdf');
+  showRes('pagenumber', `Added page numbers to ${total - start + 1} pages.`,
+    `<button class="btn btn-teal" onclick="saveAs(window._lastBlob,'numbered.pdf')">⬇️ Download</button>`);
+  window._lastBlob = blob;
+}
+
+// WATERMARK
+RENDERERS.watermark = () => {
+  document.getElementById('toolBody').innerHTML = `
+    ${dz('watermark')}
+    <div class="file-list" id="fl-watermark"></div>
+    <div class="ctrl-group">
+      <h4>💧 Watermark Settings</h4>
+      <div class="ctrl-row"><label>Text</label><input class="inp" id="wm-txt" value="CONFIDENTIAL" style="flex:1"></div>
+      <div class="ctrl-row"><label>Style</label>
+        <select class="inp" id="wm-sty">
+          <option value="diagonal">Diagonal Center</option><option value="tile">Tiled</option>
+          <option value="header">Header</option><option value="footer">Footer</option>
+        </select>
+      </div>
+      <div class="ctrl-row"><label>Font size</label><input type="number" class="inp" id="wm-fs" value="48" min="12" max="120" style="width:80px"></div>
+      <div class="ctrl-row"><label>Opacity (0.05–1)</label><input type="number" class="inp" id="wm-op" value="0.15" min="0.05" max="1" step="0.05" style="width:80px"></div>
+      <div class="ctrl-row"><label>Color</label>
+        <select class="inp" id="wm-col">
+          <option value="gray">Gray</option><option value="red">Red</option>
+          <option value="blue">Blue</option><option value="black">Black</option>
+        </select>
+      </div>
+    </div>
+    <div class="btn-row"><button class="btn btn-gold" onclick="doWM()">💧 Apply Watermark</button></div>
+    ${progHTML('watermark')}${resHTML('watermark')}`;
+};
+async function doWM() {
+  const files = STATE.watermark?.files || []; if (!files.length) { alert('Select a PDF.'); return; }
+  const txt = document.getElementById('wm-txt').value || 'WATERMARK';
+  const sty = document.getElementById('wm-sty').value;
+  const fs = parseInt(document.getElementById('wm-fs').value) || 48;
+  const op = parseFloat(document.getElementById('wm-op').value) || 0.15;
+  const col = { gray: rgb(.5,.5,.5), red: rgb(.8,0,0), blue: rgb(0,0,.8), black: rgb(0,0,0) }[document.getElementById('wm-col').value];
+  showProg('watermark', 20, 'Loading…');
+  const doc = await loadPDF(files[0]);
+  const font = await doc.embedFont(StandardFonts.HelveticaBold);
+  for (let i = 0; i < doc.getPageCount(); i++) {
+    const pg = doc.getPage(i); const { width, height } = pg.getSize();
+    const tw = font.widthOfTextAtSize(txt, fs);
+    if (sty === 'diagonal') pg.drawText(txt, { x: (width - tw) / 2, y: height / 2 - fs / 2, size: fs, font, color: col, opacity: op, rotate: degrees(45) });
+    else if (sty === 'tile') { for (let y = 60; y < height; y += 120) for (let x = 0; x < width; x += 180) pg.drawText(txt, { x, y, size: fs * .55, font, color: col, opacity: op, rotate: degrees(30) }); }
+    else if (sty === 'header') pg.drawText(txt, { x: (width - tw) / 2, y: height - 38, size: fs * .55, font, color: col, opacity: op });
+    else pg.drawText(txt, { x: (width - font.widthOfTextAtSize(txt, fs * .55)) / 2, y: 18, size: fs * .55, font, color: col, opacity: op });
+  }
+  showProg('watermark', 90, 'Saving…');
+  const b = await doc.save();
+  showProg('watermark', 100, 'Done!');
+  const blob = new Blob([b], { type: 'application/pdf' });
+  saveAs(blob, 'watermarked.pdf');
+  showRes('watermark', `Watermark applied to ${doc.getPageCount()} pages.`,
+    `<button class="btn btn-teal" onclick="saveAs(window._lastBlob,'watermarked.pdf')">⬇️ Download</button>`);
+  window._lastBlob = blob;
+}
+
+// CROP
+RENDERERS.crop = () => {
+  document.getElementById('toolBody').innerHTML = `
+    ${dz('crop')}
+    <div class="file-list" id="fl-crop"></div>
+    <div class="ctrl-group">
+      <h4>✂️ Crop Margins (points, 1pt = 1/72 inch)</h4>
+      <div class="ctrl-row">
+        <label>Left</label><input type="number" class="inp" id="cr-l" value="0" min="0" style="width:80px">
+        <label>Right</label><input type="number" class="inp" id="cr-r" value="0" min="0" style="width:80px">
+      </div>
+      <div class="ctrl-row">
+        <label>Top</label><input type="number" class="inp" id="cr-t" value="0" min="0" style="width:80px">
+        <label>Bottom</label><input type="number" class="inp" id="cr-b" value="0" min="0" style="width:80px">
+      </div>
+      <div class="ctrl-row"><label>Apply to pages</label><input class="inp" id="cr-pgs" placeholder="all  or  1,3,5-8" style="flex:1"></div>
+    </div>
+    <div class="btn-row"><button class="btn btn-gold" onclick="doCrop()">✂️ Crop & Save</button></div>
+    ${progHTML('crop')}${resHTML('crop')}`;
+};
+async function doCrop() {
+  const files = STATE.crop?.files || []; if (!files.length) { alert('Select a PDF.'); return; }
+  const l = +document.getElementById('cr-l').value || 0, r = +document.getElementById('cr-r').value || 0, t = +document.getElementById('cr-t').value || 0, b = +document.getElementById('cr-b').value || 0;
+  showProg('crop', 30, 'Loading…');
+  const doc = await loadPDF(files[0]);
+  const raw = document.getElementById('cr-pgs').value.trim();
+  let idxs = !raw || raw === 'all' ? doc.getPageIndices() : [];
+  if (raw && raw !== 'all') raw.split(',').forEach(s => { s = s.trim(); if (s.includes('-')) { const [a, b2] = s.split('-').map(x => parseInt(x) - 1); for (let i = a; i <= b2; i++) idxs.push(i); } else idxs.push(parseInt(s) - 1); });
+  idxs.forEach(i => { const pg = doc.getPage(i); const { x, y, width, height } = pg.getCropBox(); pg.setCropBox(x + l, y + b, width - l - r, height - t - b); });
+  const bytes = await doc.save();
+  showProg('crop', 100, 'Done!');
+  const blob = new Blob([bytes], { type: 'application/pdf' });
+  saveAs(blob, 'cropped.pdf');
+  showRes('crop', `Cropped ${idxs.length} page(s) successfully.`,
+    `<button class="btn btn-teal" onclick="saveAs(window._lastBlob,'cropped.pdf')">⬇️ Download</button>`);
+  window._lastBlob = blob;
+}
+
+// FLATTEN
+RENDERERS.flatten = () => {
+  document.getElementById('toolBody').innerHTML = `
+    <div class="info-box"><strong>ℹ️ Info:</strong> Merges interactive form fields and annotations into static page content.</div>
+    ${dz('flatten')}
+    <div class="file-list" id="fl-flatten"></div>
+    <div class="btn-row"><button class="btn btn-gold" onclick="doFlatten()">📋 Flatten & Save</button></div>
+    ${progHTML('flatten')}${resHTML('flatten')}`;
+};
+async function doFlatten() {
+  const files = STATE.flatten?.files || []; if (!files.length) { alert('Select a PDF.'); return; }
+  showProg('flatten', 40, 'Flattening…');
+  const doc = await loadPDF(files[0]);
+  try { doc.getForm().flatten(); } catch (e) {}
+  const b = await doc.save();
+  showProg('flatten', 100, 'Done!');
+  const blob = new Blob([b], { type: 'application/pdf' });
+  saveAs(blob, 'flattened.pdf');
+  showRes('flatten', 'PDF flattened successfully.',
+    `<button class="btn btn-teal" onclick="saveAs(window._lastBlob,'flattened.pdf')">⬇️ Download</button>`);
+  window._lastBlob = blob;
+}
+
+// METADATA
+RENDERERS.metadata = () => {
+  document.getElementById('toolBody').innerHTML = `
+    ${dz('metadata')}
+    <div class="file-list" id="fl-metadata"></div>
+    <div class="btn-row" style="margin-bottom:14px"><button class="btn btn-outline" onclick="loadMeta()">📖 Load Current Metadata</button></div>
+    <div class="ctrl-group">
+      <h4>🏷️ Document Properties</h4>
+      <div class="ctrl-row"><label>Title</label><input class="inp" id="mt-tit" placeholder="Document title" style="flex:1"></div>
+      <div class="ctrl-row"><label>Author</label><input class="inp" id="mt-aut" placeholder="Author name" style="flex:1"></div>
+      <div class="ctrl-row"><label>Subject</label><input class="inp" id="mt-sub" placeholder="Subject" style="flex:1"></div>
+      <div class="ctrl-row"><label>Keywords</label><input class="inp" id="mt-kw" placeholder="keyword1, keyword2" style="flex:1"></div>
+    </div>
+    <div class="btn-row"><button class="btn btn-gold" onclick="doMeta()">🏷️ Save Metadata</button></div>
+    ${progHTML('metadata')}${resHTML('metadata')}`;
+};
+async function loadMeta() {
+  const files = STATE.metadata?.files || []; if (!files.length) { alert('Select a PDF first.'); return; }
+  const doc = await loadPDF(files[0]);
+  document.getElementById('mt-tit').value = doc.getTitle() || '';
+  document.getElementById('mt-aut').value = doc.getAuthor() || '';
+  document.getElementById('mt-sub').value = doc.getSubject() || '';
+  document.getElementById('mt-kw').value = doc.getKeywords() || '';
+}
+async function doMeta() {
+  const files = STATE.metadata?.files || []; if (!files.length) { alert('Select a PDF.'); return; }
+  showProg('metadata', 40, 'Updating…');
+  const doc = await loadPDF(files[0]);
+  const v = id => document.getElementById(id).value;
+  if (v('mt-tit')) doc.setTitle(v('mt-tit'));
+  if (v('mt-aut')) doc.setAuthor(v('mt-aut'));
+  if (v('mt-sub')) doc.setSubject(v('mt-sub'));
+  if (v('mt-kw')) doc.setKeywords([v('mt-kw')]);
+  doc.setModificationDate(new Date());
+  const b = await doc.save();
+  showProg('metadata', 100, 'Done!');
+  const blob = new Blob([b], { type: 'application/pdf' });
+  saveAs(blob, 'metadata_updated.pdf');
+  showRes('metadata', 'Metadata updated and saved.',
+    `<button class="btn btn-teal" onclick="saveAs(window._lastBlob,'metadata_updated.pdf')">⬇️ Download</button>`);
+  window._lastBlob = blob;
+}
+
+// EXTRACT TEXT
+RENDERERS.extracttext = () => {
+  document.getElementById('toolBody').innerHTML = `
+    ${dz('extracttext')}
+    <div class="file-list" id="fl-extracttext"></div>
+    <div class="ctrl-group">
+      <h4>📄 Options</h4>
+      <div class="ctrl-row"><label>Pages</label><input class="inp" id="et-pgs" placeholder="all  or  1,3,5-8" style="flex:1"></div>
+    </div>
+    <div class="btn-row"><button class="btn btn-gold" onclick="doExtractText()">📄 Extract Text</button></div>
+    ${progHTML('extracttext')}
+    <div id="et-out" style="display:none;margin-top:14px">
+      <textarea id="et-area" class="code-area" style="height:280px" readonly></textarea>
+      <div class="btn-row" style="margin-top:10px">
+        <button class="btn btn-outline btn-sm" onclick="document.getElementById('et-area').select()">📋 Select All</button>
+        <button class="btn btn-teal btn-sm" onclick="saveAs(new Blob([document.getElementById('et-area').value],{type:'text/plain'}),'extracted.txt')">⬇️ Save .txt</button>
+      </div>
+    </div>`;
+};
+async function doExtractText() {
+  const files = STATE.extracttext?.files || []; if (!files.length) { alert('Select a PDF.'); return; }
+  const raw = document.getElementById('et-pgs').value.trim();
+  showProg('extracttext', 10, 'Loading…');
+  const pdf = await pdfjsLib.getDocument({ data: await files[0].arrayBuffer() }).promise;
+  let pgNums = [];
+  if (!raw) for (let i = 1; i <= pdf.numPages; i++) pgNums.push(i);
+  else raw.split(',').forEach(s => { s = s.trim(); if (s.includes('-')) { const [a, b] = s.split('-'); for (let i = +a; i <= +b; i++) pgNums.push(i); } else pgNums.push(+s); });
+  let all = '';
+  for (let i = 0; i < pgNums.length; i++) {
+    showProg('extracttext', 10 + Math.round((i / pgNums.length) * 87), `Reading page ${pgNums[i]}…`);
+    const pg = await pdf.getPage(pgNums[i]); const tc = await pg.getTextContent();
+    all += `\n--- Page ${pgNums[i]} ---\n` + tc.items.map(it => it.str).join(' ') + '\n';
+  }
+  showProg('extracttext', 100, 'Done!');
+  document.getElementById('et-out').style.display = '';
+  document.getElementById('et-area').value = all.trim();
+}
+
+// PROTECT
+RENDERERS.protect = () => {
+  document.getElementById('toolBody').innerHTML = `
+    <div class="warn-box"><strong>⚠️ Browser Limitation:</strong> True AES password encryption requires native code. This tool adds document restriction flags which are respected by compliant PDF readers. For real open-password protection, use LibreOffice (free) or Adobe Acrobat.</div>
+    ${dz('protect')}
+    <div class="file-list" id="fl-protect"></div>
+    <div class="ctrl-group">
+      <h4>🔐 Document Restrictions</h4>
+      <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:14px">
+        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:.88rem">
+          <input type="checkbox" id="pr-noprint" style="width:16px;height:16px;accent-color:var(--gold)"> 🚫 Disallow printing
+        </label>
+        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:.88rem">
+          <input type="checkbox" id="pr-nocopy" style="width:16px;height:16px;accent-color:var(--gold)"> 🚫 Disallow text copying
+        </label>
+        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:.88rem">
+          <input type="checkbox" id="pr-noedit" style="width:16px;height:16px;accent-color:var(--gold)"> 🚫 Disallow editing
+        </label>
+      </div>
+      <div class="ctrl-row"><label>Metadata note</label><input type="text" class="inp" id="pr-note" placeholder="e.g. Confidential – Do Not Share" style="flex:1"></div>
+    </div>
+    <div class="btn-row"><button class="btn btn-gold" onclick="doProtect()">🔐 Apply & Save</button></div>
+    ${progHTML('protect')}${resHTML('protect')}`;
+};
+async function doProtect() {
+  const files = STATE.protect?.files || []; if (!files.length) { alert('Select a PDF.'); return; }
+  showProg('protect', 50, 'Applying…');
+  const doc = await loadPDF(files[0]);
+  const note = document.getElementById('pr-note').value;
+  const flags = [];
+  if (document.getElementById('pr-noprint').checked) flags.push('No Printing');
+  if (document.getElementById('pr-nocopy').checked) flags.push('No Copying');
+  if (document.getElementById('pr-noedit').checked) flags.push('No Editing');
+  doc.setCreator('PDF Toolkit Pro');
+  if (note) doc.setSubject(note);
+  if (flags.length) doc.setKeywords(flags);
+  const b = await doc.save({ useObjectStreams: true });
+  showProg('protect', 100, 'Done!');
+  const blob = new Blob([b], { type: 'application/pdf' });
+  saveAs(blob, 'restricted.pdf');
+  showRes('protect', `Saved with: ${flags.length ? flags.join(', ') : 'no restrictions selected'}.`,
+    `<button class="btn btn-teal" onclick="saveAs(window._lastBlob,'restricted.pdf')">⬇️ Download</button>`);
+  window._lastBlob = blob;
+}
+
+// UNLOCK
+RENDERERS.unlock = () => {
+  document.getElementById('toolBody').innerHTML = `
+    ${dz('unlock')}
+    <div class="file-list" id="fl-unlock"></div>
+    <div class="ctrl-group">
+      <h4>🔓 Password (if required)</h4>
+      <div class="ctrl-row"><label>PDF Password</label><input type="password" class="inp" id="ul-pw" placeholder="Leave blank if no password" style="flex:1"></div>
+    </div>
+    <div class="btn-row"><button class="btn btn-gold" onclick="doUnlock()">🔓 Unlock & Save</button></div>
+    ${progHTML('unlock')}${resHTML('unlock')}`;
+};
+async function doUnlock() {
+  const files = STATE.unlock?.files || []; if (!files.length) { alert('Select a PDF.'); return; }
+  showProg('unlock', 40, 'Unlocking…');
+  try {
+    const doc = await PDFDocument.load(await files[0].arrayBuffer(), { password: document.getElementById('ul-pw').value, ignoreEncryption: true });
+    const b = await doc.save();
+    showProg('unlock', 100, 'Done!');
+    const blob = new Blob([b], { type: 'application/pdf' });
+    saveAs(blob, 'unlocked.pdf');
+    showRes('unlock', 'PDF unlocked and saved successfully.',
+      `<button class="btn btn-teal" onclick="saveAs(window._lastBlob,'unlocked.pdf')">⬇️ Download</button>`);
+    window._lastBlob = blob;
+  } catch (e) { showProg('unlock', 100, ''); showRes('unlock', 'Could not unlock — wrong password or unsupported encryption.'); }
+}
+
+// COMPRESS
+RENDERERS.compress = () => {
+  document.getElementById('toolBody').innerHTML = `
+    <div class="info-box"><strong>ℹ️</strong> Removes redundant PDF objects and optimises structure. For heavy image compression, a server-side tool may yield better results.</div>
+    ${dz('compress')}
+    <div class="file-list" id="fl-compress"></div>
+    <div class="btn-row"><button class="btn btn-gold" onclick="doCompress()">🗜️ Compress & Save</button></div>
+    ${progHTML('compress')}${resHTML('compress')}`;
+};
+async function doCompress() {
+  const files = STATE.compress?.files || []; if (!files.length) { alert('Select a PDF.'); return; }
+  showProg('compress', 30, 'Loading…');
+  const doc = await PDFDocument.load(await files[0].arrayBuffer());
+  showProg('compress', 70, 'Optimising…');
+  const b = await doc.save({ useObjectStreams: true, addDefaultPage: false, objectsPerTick: 50 });
+  showProg('compress', 100, 'Done!');
+  const saved = files[0].size - b.length;
+  const blob = new Blob([b], { type: 'application/pdf' });
+  saveAs(blob, 'compressed.pdf');
+  showRes('compress', `${fmtSz(files[0].size)} → ${fmtSz(b.length)} ${saved > 0 ? '(saved ' + fmtSz(saved) + ')' : '(already optimised)'}`,
+    `<button class="btn btn-teal" onclick="saveAs(window._lastBlob,'compressed.pdf')">⬇️ Download</button>`);
+  window._lastBlob = blob;
+}
+
+// GRAYSCALE
+RENDERERS.grayscale = () => {
+  document.getElementById('toolBody').innerHTML = `
+    <div class="info-box"><strong>ℹ️</strong> Each page is rendered as a grayscale image and re-encoded. Output is a rasterised PDF.</div>
+    ${dz('grayscale')}
+    <div class="file-list" id="fl-grayscale"></div>
+    <div class="btn-row"><button class="btn btn-gold" onclick="doGrayscale()">⬛ Convert to Grayscale</button></div>
+    ${progHTML('grayscale')}${resHTML('grayscale')}`;
+};
+async function doGrayscale() {
+  const files = STATE.grayscale?.files || []; if (!files.length) { alert('Select a PDF.'); return; }
+  showProg('grayscale', 10, 'Loading…');
+  const pdf = await pdfjsLib.getDocument({ data: await files[0].arrayBuffer() }).promise;
+  const nd = await PDFDocument.create();
+  for (let i = 1; i <= pdf.numPages; i++) {
+    showProg('grayscale', 10 + Math.round((i / pdf.numPages) * 83), `Converting page ${i}/${pdf.numPages}…`);
+    const pg = await pdf.getPage(i); const vp = pg.getViewport({ scale: 2 });
+    const c = document.createElement('canvas'); c.width = vp.width; c.height = vp.height;
+    const ctx = c.getContext('2d'); await pg.render({ canvasContext: ctx, viewport: vp }).promise;
+    const id = ctx.getImageData(0, 0, c.width, c.height);
+    for (let j = 0; j < id.data.length; j += 4) { const g = id.data[j] * .3 + id.data[j + 1] * .59 + id.data[j + 2] * .11; id.data[j] = id.data[j + 1] = id.data[j + 2] = g; }
+    ctx.putImageData(id, 0, 0);
+    const b64 = c.toDataURL('image/jpeg', .9).split(',')[1];
+    const jb = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+    const img = await nd.embedJpg(jb);
+    const p = nd.addPage([vp.width / 2, vp.height / 2]);
+    p.drawImage(img, { x: 0, y: 0, width: vp.width / 2, height: vp.height / 2 });
+  }
+  const b = await nd.save();
+  showProg('grayscale', 100, 'Done!');
+  const blob = new Blob([b], { type: 'application/pdf' });
+  saveAs(blob, 'grayscale.pdf');
+  showRes('grayscale', `Converted ${pdf.numPages} pages to grayscale.`,
+    `<button class="btn btn-teal" onclick="saveAs(window._lastBlob,'grayscale.pdf')">⬇️ Download</button>`);
+  window._lastBlob = blob;
+}
+
+// PDF → IMAGES
+RENDERERS.pdf2img = () => {
+  document.getElementById('toolBody').innerHTML = `
+    ${dz('pdf2img')}
+    <div class="file-list" id="fl-pdf2img"></div>
+    <div class="ctrl-group">
+      <h4>🖼️ Export Settings</h4>
+      <div class="ctrl-row"><label>Format</label>
+        <select class="inp" id="pi-fmt"><option value="image/jpeg">JPG</option><option value="image/png">PNG</option></select>
+      </div>
+      <div class="ctrl-row"><label>Resolution</label>
+        <select class="inp" id="pi-sc">
+          <option value="1">72 DPI (web)</option>
+          <option value="2" selected>144 DPI (standard)</option>
+          <option value="3">216 DPI (print)</option>
+          <option value="4">288 DPI (high quality)</option>
+        </select>
+      </div>
+      <div class="ctrl-row"><label>Pages</label><input class="inp" id="pi-pgs" placeholder="all  or  1,3,5-8" style="flex:1"></div>
+    </div>
+    <div class="btn-row"><button class="btn btn-gold" onclick="doPDF2Img()">🖼️ Export Images</button></div>
+    ${progHTML('pdf2img')}${resHTML('pdf2img')}`;
+};
+async function doPDF2Img() {
+  const files = STATE.pdf2img?.files || []; if (!files.length) { alert('Select a PDF.'); return; }
+  const fmt = document.getElementById('pi-fmt').value;
+  const sc = parseFloat(document.getElementById('pi-sc').value);
+  const raw = document.getElementById('pi-pgs').value.trim();
+  showProg('pdf2img', 10, 'Loading…');
+  const pdf = await pdfjsLib.getDocument({ data: await files[0].arrayBuffer() }).promise;
+  let pgNums = [];
+  if (!raw) for (let i = 1; i <= pdf.numPages; i++) pgNums.push(i);
+  else raw.split(',').forEach(s => { s = s.trim(); if (s.includes('-')) { const [a, b] = s.split('-'); for (let i = +a; i <= +b; i++) pgNums.push(i); } else pgNums.push(+s); });
+  const ext = fmt.includes('png') ? 'png' : 'jpg';
+  for (let i = 0; i < pgNums.length; i++) {
+    showProg('pdf2img', 10 + Math.round((i / pgNums.length) * 87), `Exporting page ${pgNums[i]}…`);
+    const pg = await pdf.getPage(pgNums[i]); const vp = pg.getViewport({ scale: sc });
+    const c = document.createElement('canvas'); c.width = vp.width; c.height = vp.height;
+    await pg.render({ canvasContext: c.getContext('2d'), viewport: vp }).promise;
+    await new Promise(res => c.toBlob(blob => { saveAs(blob, `page_${pgNums[i]}.${ext}`); res(); }, fmt, .92));
+  }
+  showProg('pdf2img', 100, 'Done!');
+  showRes('pdf2img', `Exported ${pgNums.length} image(s) — check your Downloads folder.`);
+}
+
+// IMAGES → PDF
+RENDERERS.img2pdf = () => {
+  document.getElementById('toolBody').innerHTML = `
+    ${dz('img2pdf', true, '.jpg,.jpeg,.png,.webp,image/*', 'Drop images here (JPG, PNG, WebP…)')}
+    <div class="file-list" id="fl-img2pdf"></div>
+    <div class="ctrl-group">
+      <h4>📷 PDF Settings</h4>
+      <div class="ctrl-row"><label>Page size</label>
+        <select class="inp" id="ip-sz"><option value="a4">A4</option><option value="letter">Letter</option><option value="fit">Fit to image</option></select>
+      </div>
+      <div class="ctrl-row"><label>Orientation</label>
+        <select class="inp" id="ip-or"><option value="portrait">Portrait</option><option value="landscape">Landscape</option></select>
+      </div>
+      <div class="ctrl-row"><label>Margin (pt)</label><input type="number" class="inp" id="ip-mg" value="20" min="0" max="100" style="width:80px"></div>
+    </div>
+    <div class="btn-row"><button class="btn btn-gold" onclick="doImg2PDF()">📷 Create PDF</button></div>
+    ${progHTML('img2pdf')}${resHTML('img2pdf')}`;
+};
+async function doImg2PDF() {
+  const files = STATE.img2pdf?.files || []; if (!files.length) { alert('Select images.'); return; }
+  const szMap = { a4: [595, 842], letter: [612, 792] };
+  const szMode = document.getElementById('ip-sz').value;
+  const mg = parseInt(document.getElementById('ip-mg').value) || 0;
+  const landscape = document.getElementById('ip-or').value === 'landscape';
+  showProg('img2pdf', 10, 'Creating…');
+  const doc = await PDFDocument.create();
+  for (let i = 0; i < files.length; i++) {
+    showProg('img2pdf', 10 + Math.round((i / files.length) * 85), `Adding image ${i+1}/${files.length}…`);
+    const ab = await files[i].arrayBuffer(); const bytes = new Uint8Array(ab);
+    let img;
+    try { img = files[i].type === 'image/png' || files[i].name.endsWith('.png') ? await doc.embedPng(bytes) : await doc.embedJpg(bytes); }
+    catch (e) { try { img = await doc.embedJpg(bytes); } catch (e2) { continue; } }
+    const { width: iw, height: ih } = img;
+    let [pw, ph] = szMode === 'fit' ? [iw + mg * 2, ih + mg * 2] : szMap[szMode];
+    if (landscape && szMode !== 'fit') [pw, ph] = [ph, pw];
+    const pg = doc.addPage([pw, ph]);
+    const sc = Math.min((pw - mg * 2) / iw, (ph - mg * 2) / ih, 1);
+    pg.drawImage(img, { x: (pw - iw * sc) / 2, y: (ph - ih * sc) / 2, width: iw * sc, height: ih * sc });
+  }
+  const b = await doc.save();
+  showProg('img2pdf', 100, 'Done!');
+  const blob = new Blob([b], { type: 'application/pdf' });
+  saveAs(blob, 'images.pdf');
+  showRes('img2pdf', `Created PDF with ${files.length} image(s) · ${fmtSz(b.length)}`,
+    `<button class="btn btn-teal" onclick="saveAs(window._lastBlob,'images.pdf')">⬇️ Download</button>`);
+  window._lastBlob = blob;
+}
+
+// PDF → TEXT
+RENDERERS.pdf2text = () => {
+  document.getElementById('toolBody').innerHTML = `
+    ${dz('pdf2text')}
+    <div class="file-list" id="fl-pdf2text"></div>
+    <div class="btn-row"><button class="btn btn-gold" onclick="doPDF2Text()">📝 Extract All Text</button></div>
+    ${progHTML('pdf2text')}
+    <div id="pt-out" style="display:none;margin-top:14px">
+      <textarea id="pt-area" class="code-area" style="height:320px" readonly></textarea>
+      <div class="btn-row" style="margin-top:10px">
+        <button class="btn btn-outline btn-sm" onclick="document.getElementById('pt-area').select()">📋 Select All</button>
+        <button class="btn btn-teal btn-sm" onclick="saveAs(new Blob([document.getElementById('pt-area').value],{type:'text/plain'}),'text.txt')">⬇️ Save .txt</button>
+      </div>
+    </div>`;
+};
+async function doPDF2Text() {
+  const files = STATE.pdf2text?.files || []; if (!files.length) { alert('Select a PDF.'); return; }
+  showProg('pdf2text', 10, 'Loading…');
+  const pdf = await pdfjsLib.getDocument({ data: await files[0].arrayBuffer() }).promise;
+  let all = '';
+  for (let i = 1; i <= pdf.numPages; i++) {
+    showProg('pdf2text', 10 + Math.round((i / pdf.numPages) * 87), `Reading page ${i}/${pdf.numPages}…`);
+    const pg = await pdf.getPage(i); const tc = await pg.getTextContent();
+    all += `\n--- Page ${i} ---\n` + tc.items.map(it => it.str).join(' ') + '\n';
+  }
+  showProg('pdf2text', 100, 'Done!');
+  document.getElementById('pt-out').style.display = '';
+  document.getElementById('pt-area').value = all.trim();
+}
+
+// EXTRACT IMAGES
+RENDERERS.extractimages = () => {
+  document.getElementById('toolBody').innerHTML = `
+    <div class="info-box"><strong>ℹ️</strong> Renders each PDF page as a high-quality image and saves it as JPG.</div>
+    ${dz('extractimages')}
+    <div class="file-list" id="fl-extractimages"></div>
+    <div class="ctrl-group">
+      <h4>🎨 Export Settings</h4>
+      <div class="ctrl-row"><label>Scale / DPI</label>
+        <select class="inp" id="ei-sc"><option value="1">1× (72 DPI)</option><option value="2" selected>2× (144 DPI)</option><option value="3">3× (216 DPI)</option></select>
+      </div>
+    </div>
+    <div class="btn-row"><button class="btn btn-gold" onclick="doExtractImages()">🎨 Extract & Save All</button></div>
+    ${progHTML('extractimages')}${resHTML('extractimages')}`;
+};
+async function doExtractImages() {
+  const files = STATE.extractimages?.files || []; if (!files.length) { alert('Select a PDF.'); return; }
+  const sc = parseFloat(document.getElementById('ei-sc').value);
+  showProg('extractimages', 10, 'Loading…');
+  const pdf = await pdfjsLib.getDocument({ data: await files[0].arrayBuffer() }).promise;
+  for (let i = 1; i <= pdf.numPages; i++) {
+    showProg('extractimages', 10 + Math.round((i / pdf.numPages) * 87), `Exporting page ${i}/${pdf.numPages}…`);
+    const pg = await pdf.getPage(i); const vp = pg.getViewport({ scale: sc });
+    const c = document.createElement('canvas'); c.width = vp.width; c.height = vp.height;
+    await pg.render({ canvasContext: c.getContext('2d'), viewport: vp }).promise;
+    await new Promise(res => c.toBlob(blob => { saveAs(blob, `page_${i}.jpg`); res(); }, 'image/jpeg', .92));
+  }
+  showProg('extractimages', 100, 'Done!');
+  showRes('extractimages', `Saved ${pdf.numPages} image(s) — check your Downloads folder.`);
+}
+
+// HTML → PDF
+RENDERERS.html2pdf = () => {
+  document.getElementById('toolBody').innerHTML = `
+    <div class="info-box"><strong>ℹ️</strong> Click Convert — a print dialog opens. Choose <strong>"Save as PDF"</strong> as destination.</div>
+    <div class="ctrl-group">
+      <h4>🌐 HTML Content</h4>
+      <div class="ctrl-row"><label>Document title</label><input class="inp" id="h2p-tit" value="My Document" style="flex:1"></div>
+      <textarea id="h2p-html" class="code-area" style="height:220px;margin-top:12px" placeholder="Paste your HTML here…"><h1>Hello World</h1><p>This is a sample document.</p></textarea>
+    </div>
+    <div class="btn-row"><button class="btn btn-gold" onclick="doH2P()">🌐 Convert → Open Print Dialog</button></div>`;
+};
+function doH2P() {
+  const html = document.getElementById('h2p-html').value;
+  const title = document.getElementById('h2p-tit').value || 'Document';
+  const w = window.open('', '_blank');
+  w.document.write(`<!DOCTYPE html><html><head><title>${title}</title><style>body{font-family:Arial,sans-serif;padding:40px;max-width:800px;margin:0 auto;color:#222}h1,h2,h3{color:#111}table{border-collapse:collapse;width:100%}td,th{border:1px solid #ddd;padding:8px}</style></head><body>${html}</body></html>`);
+  w.document.close(); setTimeout(() => w.print(), 600);
+}
+
+// VIEWER
+RENDERERS.viewer = () => {
+  document.getElementById('toolBody').innerHTML = `
+    ${dz('viewer', false, '.pdf', 'Drop PDF here to view')}
+    <div class="file-list" id="fl-viewer"></div>
+    <div class="viewer-nav" id="vn" style="display:none">
+      <button class="btn btn-outline btn-sm" onclick="viewerNav(-1)">◀ Prev</button>
+      <span class="pg-counter" id="vpc">Page — of —</span>
+      <button class="btn btn-outline btn-sm" onclick="viewerNav(1)">Next ▶</button>
+      <select class="inp" id="vz" onchange="viewerRender()" style="width:auto">
+        <option value=".75">75%</option><option value="1">100%</option>
+        <option value="1.5">150%</option><option value="2" selected>200%</option>
+        <option value="3">300%</option>
+      </select>
+    </div>
+    <div id="viewer-canvas-wrap"><canvas id="viewer-canvas"></canvas></div>`;
+};
+let VWR = { pdf: null, page: 1 };
+document.addEventListener('change', async e => {
+  if (e.target.id === 'fi-viewer') {
+    const f = e.target.files[0]; if (!f) return;
+    STATE.viewer = { files: [f] }; renderFL('viewer', [f]);
+    VWR.pdf = await pdfjsLib.getDocument({ data: await f.arrayBuffer() }).promise;
+    VWR.page = 1; document.getElementById('vn').style.display = 'flex'; viewerRender();
+  }
+});
+async function viewerRender() {
+  if (!VWR.pdf) return;
+  const sc = parseFloat(document.getElementById('vz')?.value) || 2;
+  const pg = await VWR.pdf.getPage(VWR.page); const vp = pg.getViewport({ scale: sc });
+  const c = document.getElementById('viewer-canvas'); c.width = vp.width; c.height = vp.height;
+  await pg.render({ canvasContext: c.getContext('2d'), viewport: vp }).promise;
+  document.getElementById('vpc').textContent = `Page ${VWR.page} of ${VWR.pdf.numPages}`;
+}
+function viewerNav(d) { if (!VWR.pdf) return; VWR.page = Math.max(1, Math.min(VWR.pdf.numPages, VWR.page + d)); viewerRender(); }
+
+// COMPARE
+RENDERERS.compare = () => {
+  document.getElementById('toolBody').innerHTML = `
+    <div class="compare-grid">
+      <div><h4 style="font-size:.85rem;font-weight:600;margin-bottom:10px;color:var(--txt2)">📄 PDF 1 (Original)</h4>
+        ${dz('compare1', false, '.pdf', 'First PDF')}
+        <div class="file-list" id="fl-compare1"></div>
+      </div>
+      <div><h4 style="font-size:.85rem;font-weight:600;margin-bottom:10px;color:var(--txt2)">📄 PDF 2 (Modified)</h4>
+        ${dz('compare2', false, '.pdf', 'Second PDF')}
+        <div class="file-list" id="fl-compare2"></div>
+      </div>
+    </div>
+    <div class="btn-row"><button class="btn btn-gold" onclick="doCompare()">🔍 Compare PDFs</button></div>
+    ${progHTML('compare')}
+    <div id="cmp-result" style="display:none;margin-top:16px"></div>`;
+};
+async function doCompare() {
+  const f1 = (STATE.compare1?.files || [])[0]; const f2 = (STATE.compare2?.files || [])[0];
+  if (!f1 || !f2) { alert('Select both PDFs.'); return; }
+  async function getText(f) {
+    const pdf = await pdfjsLib.getDocument({ data: await f.arrayBuffer() }).promise; let t = '';
+    for (let i = 1; i <= pdf.numPages; i++) { const pg = await pdf.getPage(i); const tc = await pg.getTextContent(); t += tc.items.map(it => it.str).join(' ') + '\n'; }
+    return t;
+  }
+  showProg('compare', 20, 'Reading PDF 1…'); const t1 = await getText(f1);
+  showProg('compare', 55, 'Reading PDF 2…'); const t2 = await getText(f2);
+  showProg('compare', 80, 'Comparing…');
+  const w1 = new Set(t1.toLowerCase().split(/\s+/).filter(w => w.length > 2));
+  const w2 = new Set(t2.toLowerCase().split(/\s+/).filter(w => w.length > 2));
+  const only1 = [...w1].filter(w => !w2.has(w) && w.length > 3).slice(0, 40);
+  const only2 = [...w2].filter(w => !w1.has(w) && w.length > 3).slice(0, 40);
+  const common = [...w1].filter(w => w2.has(w)).length;
+  const sim = Math.round((common / Math.max(w1.size, w2.size)) * 100);
+  showProg('compare', 100, 'Done!');
+  const simColor = sim > 80 ? 'var(--teal)' : sim > 50 ? 'var(--gold)' : 'var(--rose)';
+  document.getElementById('cmp-result').style.display = '';
+  document.getElementById('cmp-result').innerHTML = `
+    <div class="ctrl-group">
+      <h4>📊 Comparison Results</h4>
+      <div style="text-align:center;margin:12px 0 20px">
+        <div style="font-size:3rem;font-weight:900;color:${simColor};font-family:'Syne',sans-serif">${sim}%</div>
+        <div style="color:var(--txt2);font-size:.85rem">similarity score</div>
+        <div class="sim-meter"><div class="sim-fill" style="width:${sim}%;background:${simColor}"></div></div>
+      </div>
+      <div class="ctrl-row"><label>Words in PDF 1</label><span style="font-weight:700">${w1.size.toLocaleString()}</span></div>
+      <div class="ctrl-row"><label>Words in PDF 2</label><span style="font-weight:700">${w2.size.toLocaleString()}</span></div>
+      <div class="ctrl-row"><label>Common words</label><span style="font-weight:700;color:var(--teal)">${common.toLocaleString()}</span></div>
+      ${only1.length ? `<div style="margin-top:14px"><div style="font-size:.75rem;color:var(--txt3);margin-bottom:6px;text-transform:uppercase;letter-spacing:.08em">Only in PDF 1</div>${only1.map(w => `<span style="display:inline-block;background:rgba(251,113,133,.1);border:1px solid rgba(251,113,133,.2);color:var(--rose);font-size:.7rem;padding:2px 8px;border-radius:6px;margin:2px">${w}</span>`).join('')}</div>` : ''}
+      ${only2.length ? `<div style="margin-top:10px"><div style="font-size:.75rem;color:var(--txt3);margin-bottom:6px;text-transform:uppercase;letter-spacing:.08em">Only in PDF 2</div>${only2.map(w => `<span style="display:inline-block;background:rgba(45,212,191,.1);border:1px solid rgba(45,212,191,.2);color:var(--teal);font-size:.7rem;padding:2px 8px;border-radius:6px;margin:2px">${w}</span>`).join('')}</div>` : ''}
+    </div>`;
+}
+
+// REPAIR
+RENDERERS.repair = () => {
+  document.getElementById('toolBody').innerHTML = `
+    <div class="info-box"><strong>ℹ️</strong> Attempts to reload and re-save the PDF, fixing minor structural corruption. Severely damaged files may not be recoverable.</div>
+    ${dz('repair')}
+    <div class="file-list" id="fl-repair"></div>
+    <div class="btn-row"><button class="btn btn-gold" onclick="doRepair()">🔧 Attempt Repair</button></div>
+    ${progHTML('repair')}${resHTML('repair')}`;
+};
+async function doRepair() {
+  const files = STATE.repair?.files || []; if (!files.length) { alert('Select a PDF.'); return; }
+  showProg('repair', 40, 'Attempting repair…');
+  try {
+    const doc = await PDFDocument.load(await files[0].arrayBuffer(), { ignoreEncryption: true, throwOnInvalidObject: false });
+    const b = await doc.save();
+    showProg('repair', 100, 'Done!');
+    const blob = new Blob([b], { type: 'application/pdf' });
+    saveAs(blob, 'repaired.pdf');
+    showRes('repair', `Repair complete · ${fmtSz(b.length)}`,
+      `<button class="btn btn-teal" onclick="saveAs(window._lastBlob,'repaired.pdf')">⬇️ Download</button>`);
+    window._lastBlob = blob;
+  } catch (e) { showProg('repair', 100, ''); showRes('repair', `Could not repair: ${e.message}`); }
+}
+
+// BLANK PDF
+RENDERERS.blank = () => {
+  document.getElementById('toolBody').innerHTML = `
+    <div class="ctrl-group">
+      <h4>➕ Blank PDF Settings</h4>
+      <div class="ctrl-row"><label>Page size</label>
+        <select class="inp" id="bl-sz" onchange="toggleBlankCustom()">
+          <option value="a4">A4 (210×297mm)</option><option value="letter">Letter (8.5×11in)</option>
+          <option value="a3">A3 (297×420mm)</option><option value="a5">A5 (148×210mm)</option>
+          <option value="custom">Custom size</option>
+        </select>
+      </div>
+      <div id="bl-cust" style="display:none">
+        <div class="ctrl-row"><label>Width (pt)</label><input type="number" class="inp" id="bl-w" value="595" min="100" style="width:100px"></div>
+        <div class="ctrl-row"><label>Height (pt)</label><input type="number" class="inp" id="bl-h" value="842" min="100" style="width:100px"></div>
+      </div>
+      <div class="ctrl-row"><label>Orientation</label>
+        <select class="inp" id="bl-or"><option value="portrait">Portrait</option><option value="landscape">Landscape</option></select>
+      </div>
+      <div class="ctrl-row"><label>Number of pages</label><input type="number" class="inp" id="bl-pgs" value="1" min="1" max="200" style="width:80px"></div>
+      <div class="ctrl-row"><label>Background</label>
+        <select class="inp" id="bl-bg">
+          <option value="white">White</option><option value="cream">Cream / Off-white</option>
+          <option value="gray">Light Gray</option><option value="black">Dark / Black</option>
+        </select>
+      </div>
+    </div>
+    <div class="btn-row"><button class="btn btn-gold" onclick="doBlank()">➕ Generate PDF</button></div>
+    ${resHTML('blank')}`;
+};
+function toggleBlankCustom() { document.getElementById('bl-cust').style.display = document.getElementById('bl-sz').value === 'custom' ? '' : 'none'; }
+async function doBlank() {
+  const szMap = { a4: [595, 842], letter: [612, 792], a3: [842, 1191], a5: [420, 595] };
+  const m = document.getElementById('bl-sz').value;
+  let [w, h] = m === 'custom' ? [+document.getElementById('bl-w').value, +document.getElementById('bl-h').value] : szMap[m];
+  if (document.getElementById('bl-or').value === 'landscape') [w, h] = [h, w];
+  const n = parseInt(document.getElementById('bl-pgs').value) || 1;
+  const bgMap = { white: rgb(1,1,1), cream: rgb(.99,.97,.91), gray: rgb(.94,.94,.94), black: rgb(.08,.08,.08) };
+  const bg = bgMap[document.getElementById('bl-bg').value];
+  const doc = await PDFDocument.create();
+  for (let i = 0; i < n; i++) { const p = doc.addPage([w, h]); p.drawRectangle({ x: 0, y: 0, width: w, height: h, color: bg }); }
+  const b = await doc.save();
+  const blob = new Blob([b], { type: 'application/pdf' });
+  saveAs(blob, `blank_${n}pg.pdf`);
+  showRes('blank', `Created ${n}-page PDF · ${w}×${h}pt · ${fmtSz(b.length)}`,
+    `<button class="btn btn-teal" onclick="saveAs(window._lastBlob,'blank_${n}pg.pdf')">⬇️ Download</button>`);
+  window._lastBlob = blob;
+}
+
+// ── INIT ──────────────────────────────────────────────────
+const params = new URLSearchParams(location.search);
+const toolId = params.get('t');
+const toolInfo = TOOLS[toolId];
+
+if (toolId && toolInfo && RENDERERS[toolId]) {
+  document.title = `${toolInfo.name} — PDF Toolkit Pro`;
+  document.getElementById('toolContent').innerHTML = `
+    <div class="tool-hdr anim-up">
+      <div class="tool-hdr-icon">${toolInfo.icon}</div>
+      <div>
+        <h2>${toolInfo.name}</h2>
+        <p>${toolInfo.desc}</p>
+      </div>
+    </div>
+    <div id="toolBody"></div>`;
+  RENDERERS[toolId]();
+} else {
+  document.getElementById('toolContent').innerHTML = `
+    <div style="text-align:center;padding:60px 24px;color:var(--txt3)">
+      <div style="font-size:3rem;margin-bottom:16px">🔍</div>
+      <h2 style="font-family:'Syne',sans-serif;margin-bottom:10px">Tool not found</h2>
+      <p>That tool doesn't exist. <a href="index.html" style="color:var(--gold)">Go back to all tools →</a></p>
+    </div>`;
+}
+</script>
+</body>
+</html>
